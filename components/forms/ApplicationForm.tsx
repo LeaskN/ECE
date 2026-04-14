@@ -1,8 +1,9 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, useActionState, useState } from "react";
 import { ApplicantInformationSection } from "@/components/forms/ApplicantInformationSection";
 import { ProgramInformationSection } from "@/components/forms/ProgramInformationSection";
+import { submitApplication } from "@/app/apply/actions";
 import { formatSsnInput } from "@/lib/utils/ssn";
 import {
   FormErrors,
@@ -48,6 +49,10 @@ const requiredSubmitStringFields: Exclude<StringField, "addressLine2">[] = [
 export function ApplicationForm() {
   const [values, setValues] = useState<FormValues>(initialValues);
   const [errors, setErrors] = useState<FormErrors>({});
+  const [state, formAction, isPending] = useActionState(
+    submitApplication,
+    null,
+  );
 
   function handleFieldChange(
     event: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -75,6 +80,7 @@ export function ApplicationForm() {
       [fieldName]: validateStringField(fieldName, nextValue),
     }));
   }
+
   function handleCheckboxChange(event: ChangeEvent<HTMLInputElement>) {
     const { name, checked } = event.target;
     const fieldName = name as BooleanField;
@@ -90,9 +96,7 @@ export function ApplicationForm() {
     }));
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     const nextErrors: FormErrors = {};
 
     for (const field of requiredSubmitStringFields) {
@@ -109,15 +113,14 @@ export function ApplicationForm() {
     const hasErrors = Object.values(nextErrors).some(Boolean);
 
     if (hasErrors) {
-      return;
+      event.preventDefault();
     }
-
-    console.log("submitted values:", values);
   }
 
   return (
     <form
       autoComplete="on"
+      action={formAction}
       onSubmit={handleSubmit}
       className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
     >
@@ -136,12 +139,25 @@ export function ApplicationForm() {
         onCheckboxChange={handleCheckboxChange}
       />
 
+      {state?.error ? (
+        <p className="mt-4 text-sm text-red-600">{state.error}</p>
+      ) : null}
+
+      {state?.success ? (
+        <div className="mt-4 rounded-md bg-green-50 p-3 text-sm text-green-800">
+          <p>Application submitted successfully.</p>
+          <p>Application ID: {state.applicationId}</p>
+          <p>Review tier: {state.reviewTier}</p>
+        </div>
+      ) : null}
+
       <div className="mt-8 flex justify-end">
         <button
           type="submit"
-          className="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+          disabled={isPending}
+          className="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Submit application
+          {isPending ? "Submitting..." : "Submit application"}
         </button>
       </div>
     </form>
