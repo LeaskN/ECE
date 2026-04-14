@@ -1,6 +1,12 @@
 "use client";
 
-import { ChangeEvent, useActionState, useState } from "react";
+import {
+  ChangeEvent,
+  SyntheticEvent,
+  useActionState,
+  useEffect,
+  useState,
+} from "react";
 import { ApplicantInformationSection } from "@/components/forms/ApplicantInformationSection";
 import { ProgramInformationSection } from "@/components/forms/ProgramInformationSection";
 import { submitApplication } from "@/app/apply/actions";
@@ -46,13 +52,38 @@ const requiredSubmitStringFields: Exclude<StringField, "addressLine2">[] = [
   "amountRequested",
 ];
 
+const submitFieldOrder: Array<keyof FormValues> = [
+  "firstName",
+  "lastName",
+  "email",
+  "phoneNumber",
+  "dateOfBirth",
+  "ssn",
+  "addressLine1",
+  "city",
+  "state",
+  "zipCode",
+  "programName",
+  "amountRequested",
+  "agreementAccepted",
+];
+
 export function ApplicationForm() {
   const [values, setValues] = useState<FormValues>(initialValues);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [state, formAction, isPending] = useActionState(
+  const [submissionState, formAction, isPending] = useActionState(
     submitApplication,
     null,
   );
+
+  useEffect(() => {
+    if (!submissionState?.success) {
+      return;
+    }
+
+    setValues(initialValues);
+    setErrors({});
+  }, [submissionState?.success]);
 
   function handleFieldChange(
     event: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -96,7 +127,7 @@ export function ApplicationForm() {
     }));
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     const nextErrors: FormErrors = {};
 
     for (const field of requiredSubmitStringFields) {
@@ -110,10 +141,19 @@ export function ApplicationForm() {
 
     setErrors(nextErrors);
 
-    const hasErrors = Object.values(nextErrors).some(Boolean);
+    const firstInvalidField = submitFieldOrder.find(
+      (field) => nextErrors[field],
+    );
 
-    if (hasErrors) {
+    if (firstInvalidField) {
       event.preventDefault();
+
+      requestAnimationFrame(() => {
+        const fieldElement = document.getElementById(firstInvalidField);
+        fieldElement?.focus();
+      });
+
+      return;
     }
   }
 
@@ -139,15 +179,15 @@ export function ApplicationForm() {
         onCheckboxChange={handleCheckboxChange}
       />
 
-      {state?.error ? (
-        <p className="mt-4 text-sm text-red-600">{state.error}</p>
+      {submissionState?.error ? (
+        <p className="mt-4 text-sm text-red-600">{submissionState.error}</p>
       ) : null}
 
-      {state?.success ? (
+      {submissionState?.success ? (
         <div className="mt-4 rounded-md bg-green-50 p-3 text-sm text-green-800">
           <p>Application submitted successfully.</p>
-          <p>Application ID: {state.applicationId}</p>
-          <p>Review tier: {state.reviewTier}</p>
+          <p>Application ID: {submissionState.applicationId}</p>
+          <p>Review tier: {submissionState.reviewTier}</p>
         </div>
       ) : null}
 

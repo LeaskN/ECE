@@ -109,8 +109,8 @@ function validateZipCode(zipCode: string): string | undefined {
     return "ZIP code is required";
   }
 
-  if (!/^\d{5}$/.test(zipCode)) {
-    return "ZIP code must be 5 digits";
+  if (!/^\d{5}(-\d{4})?$/.test(zipCode)) {
+    return "ZIP code must be 5 digits or ZIP+4";
   }
 
   return undefined;

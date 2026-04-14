@@ -18,7 +18,7 @@ function isValidState(state: string): boolean {
 }
 
 function isValidZipCode(zipCode: string): boolean {
-  return /^\d{5}$/.test(zipCode);
+  return /^\d{5}(-\d{4})?$/.test(zipCode);
 }
 
 export function parseAndValidateApplicationInput(

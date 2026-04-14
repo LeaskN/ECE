@@ -198,9 +198,9 @@ export function ApplicantInformationSection({
               autoComplete="postal-code"
               inputMode="numeric"
               placeholder="33701"
-              pattern="\d{5}"
-              maxLength={5}
-              title="ZIP code must be 5 digits"
+              pattern="\d{5}(-\d{4})?"
+              maxLength={10}
+              title="ZIP code must be 5 digits or ZIP+4 format"
               value={values.zipCode}
               onChange={onFieldChange}
             />

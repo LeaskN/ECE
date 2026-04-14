@@ -38,7 +38,8 @@ export function ProgramInformationSection({
           </>
         </FormField>
 
-        <FormField htmlFor="amountRequested" label="Amount requested">
+        <FormField htmlFor="amountRequested" label="Requested amount (USD)">
+          {" "}
           <>
             <TextInput
               id="amountRequested"
@@ -48,6 +49,7 @@ export function ProgramInformationSection({
               min="0.01"
               step="0.01"
               inputMode="decimal"
+              placeholder="1000.00"
               value={values.amountRequested}
               onChange={onFieldChange}
             />
