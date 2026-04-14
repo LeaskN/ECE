@@ -1,39 +1,11 @@
+import { getSsnParts } from "@/lib/utils/ssn";
+import { getDigitsOnly, getUserAge } from "@/lib/utils/common";
 import { ApplicationInput, ReviewTier } from "@/types/application";
 
 type TriageResult = {
   reviewTier: ReviewTier;
   riskFlags: string[];
 };
-
-function getUserAge(dateOfBirth: string): number {
-  const today = new Date();
-  const dob = new Date(dateOfBirth);
-
-  let age = today.getFullYear() - dob.getFullYear();
-  const hasHadBirthdayThisYear =
-    today.getMonth() > dob.getMonth() ||
-    (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
-
-  if (!hasHadBirthdayThisYear) {
-    age -= 1;
-  }
-
-  return age;
-}
-
-function getDigitsOnly(value: string): string {
-  return value.replace(/\D/g, "");
-}
-
-function getSsnParts(ssn: string): [string, string, string] {
-  const [first3, middle2, last4] = ssn.split("-");
-
-  if (!first3 || !middle2 || !last4) {
-    throw new Error("SSN must be validated before triage");
-  }
-
-  return [first3, middle2, last4];
-}
 
 function getSsnRiskFlags(ssn: string): string[] {
   const flags: string[] = [];
