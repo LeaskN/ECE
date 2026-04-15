@@ -6,6 +6,7 @@ import {
 import { evaluateApplication } from "@/lib/triage";
 import { parseAndValidateApplicationInput } from "@/lib/validation";
 import { NextRequest, NextResponse } from "next/server";
+import { encryptSensitiveValue } from "@/lib/crypto";
 
 export async function POST(request: NextRequest) {
   const apiKey = request.headers.get("X-API-Key");
@@ -24,12 +25,16 @@ export async function POST(request: NextRequest) {
     const applicationId = createApplicationId();
     const submittedAt = new Date().toISOString();
 
+    const ssnEncrypted = encryptSensitiveValue(input.ssn);
+    const { ssn, ...applicationWithoutRawSsn } = input;
+
     saveApplication({
       applicationId,
       submittedAt,
       reviewTier,
       riskFlags,
-      ...input,
+      ...applicationWithoutRawSsn,
+      ssnEncrypted,
     });
 
     saveHandoffRecord({

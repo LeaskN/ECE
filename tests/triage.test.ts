@@ -2,6 +2,7 @@ import { evaluateApplication } from "@/lib/triage";
 import { ApplicationInput } from "@/types/application";
 import { POST } from "@/app/api/applications/route";
 import { NextRequest } from "next/server";
+import { decryptSensitiveValue, encryptSensitiveValue } from "@/lib/crypto";
 
 function buildApplication(
   overrides: Partial<ApplicationInput> = {},
@@ -76,5 +77,15 @@ describe("POST /api/applications auth", () => {
     const response = await POST(request);
 
     expect(response.status).toBe(401);
+  });
+});
+
+describe("crypto helpers", () => {
+  it("encrypts and decrypts a sensitive value", () => {
+    const original = "123-45-6789";
+    const encrypted = encryptSensitiveValue(original);
+
+    expect(encrypted).not.toBe(original);
+    expect(decryptSensitiveValue(encrypted)).toBe(original);
   });
 });

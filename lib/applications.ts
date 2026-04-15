@@ -1,5 +1,5 @@
-import { applicationStore, handoffStore } from '@/lib/store';
-import { HandoffRecord, StoredApplication } from '@/types/application';
+import { applicationStore, handoffStore } from "@/lib/store";
+import { HandoffRecord, StoredApplication } from "@/types/application";
 
 export function createApplicationId(): string {
   return crypto.randomUUID();

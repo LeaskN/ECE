@@ -1,4 +1,4 @@
-export type ReviewTier = 'standard' | 'manual_review';
+export type ReviewTier = "standard" | "manual_review";
 
 export type ApplicationInput = {
   firstName: string;
@@ -17,11 +17,12 @@ export type ApplicationInput = {
   agreementAccepted: boolean;
 };
 
-export type StoredApplication = ApplicationInput & {
+export type StoredApplication = Omit<ApplicationInput, "ssn"> & {
   applicationId: string;
   submittedAt: string;
   reviewTier: ReviewTier;
   riskFlags: string[];
+  ssnEncrypted: string;
 };
 
 export type HandoffRecord = {
