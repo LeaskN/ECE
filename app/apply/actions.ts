@@ -1,6 +1,6 @@
 "use server";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3002";
+const API_BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001";
 
 type SubmitResult = {
   success: boolean;
