@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ECE Take-Home
 
-## Getting Started
+### Getting Started
+- Bash
+- npm install
+- npm run dev
+- Access the application at /apply via the local Next.js port.
 
-First, run the development server:
+### PII & Security Handling
+To minimize exposure of sensitive data:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Encryption: SSNs are encrypted server-side before being stored in memory.
+- API responses do not return submitted PII.
+- UI clears/hides sensitive values immediately after submission.
+- Downstream records exclude the SSN entirely.
+- Logging: Request payloads and sensitive fields are excluded from error or response logs.
+- Raw SSNs exist in memory only for validation before being discarded or encrypted.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Business Rules & Triage
+An application is flagged for manual_review if any of the following occur:
+- Requested Amount: Exceeds $1000.
+- Age: Applicant is under 18 years old.
+- SSN: Matches suspicious or unusual patterns that should be reviewed manually.
+- Contact: Phone number fails basic validity checks.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Downstream Handoff
+A separate Handoff Record is generated to simulate integration with external systems. This record contains only necessary metadata, intentionally excluding the SSN.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Validation Strategy
 
-## Learn More
+- Validation is intentionally separated from business rules so the API can reject truly invalid input while still allowing potentially valid, but suspicious, applications to be reviewed.
 
-To learn more about Next.js, take a look at the following resources:
+Client-Side:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Provides immediate feedback for a better user experience.
+- Catches common input issues before submission.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Server-Side:
 
-## Deploy on Vercel
+- Acts as the source of truth.
+- Re-validates all submitted data, even if client-side validation is bypassed.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Server validation includes:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Format: Email, 10-digit phone number, SSN, and ZIP / ZIP+4.
+- Geography: Valid 2-letter US state codes.
+- Logic: Positive dollar amounts, strict DOB parsing, and required agreement checkbox validation.
+- Required Fields: Ensures all non-optional applicant and program fields are present.
+
+### Validation vs. Triage:
+
+- Structurally invalid SSNs are rejected.
+- Correctly formatted but suspicious SSNs are accepted and flagged for manual review instead.
+- Testing & AI Usage
+- Testing Focus: Coverage is prioritized for triage logic, authentication, and sensitive-data handling.
+
+### AI Collaboration: 
+- AI was used for text completion, naming suggestions, and a checklist to verify the assessment was complete. Also for the building of this README.
+- All AI suggestions were manually reviewed.
+
+### Future Roadmap
+
+If granted additional time, the following enhancements would be prioritized:
+
+Integration: Expanded API-level testing for validation edge cases and successful submission flows.
+Efficiency: Unified validation schemas to reduce duplication between client and server.
+Safety: Stronger redaction utilities for any future logging or debugging workflows.
+Security: Basic rate limiting and abuse protections for the submission endpoint.
