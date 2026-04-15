@@ -79,8 +79,10 @@ export function ApplicantInformationSection({
               type="tel"
               required
               autoComplete="tel"
-              inputMode="tel"
+              inputMode="numeric"
               placeholder="555-123-4567"
+              pattern="[0-9()\-\s]+"
+              title="Phone number can only contain digits, spaces, parentheses, and dashes"
               value={values.phoneNumber}
               onChange={onFieldChange}
             />

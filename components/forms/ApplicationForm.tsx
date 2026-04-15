@@ -97,6 +97,10 @@ export function ApplicationForm() {
 
     let nextValue = value;
 
+    if (fieldName === "phoneNumber") {
+      nextValue = value.replace(/[^\d()\-\s]/g, "");
+    }
+
     if (fieldName === "ssn") {
       nextValue = formatSsnInput(value, values.ssn);
     }

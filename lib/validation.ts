@@ -5,8 +5,25 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-function isValidDate(date: string): boolean {
-  return !Number.isNaN(new Date(date).getTime());
+function isValidDateOfBirth(dateOfBirth: string): boolean {
+  const dob = new Date(dateOfBirth);
+
+  if (Number.isNaN(dob.getTime())) {
+    return false;
+  }
+
+  const today = new Date();
+
+  let age = today.getFullYear() - dob.getFullYear();
+  const hasHadBirthdayThisYear =
+    today.getMonth() > dob.getMonth() ||
+    (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
+
+  if (!hasHadBirthdayThisYear) {
+    age -= 1;
+  }
+
+  return age >= 0 && age <= 120;
 }
 
 function isValidSsn(ssn: string): boolean {
@@ -57,7 +74,7 @@ export function parseAndValidateApplicationInput(
     throw new Error("Phone number is required");
   }
 
-  if (!isValidDate(input.dateOfBirth)) {
+  if (!isValidDateOfBirth(input.dateOfBirth)) {
     throw new Error("A valid date of birth is required");
   }
 

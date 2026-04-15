@@ -37,22 +37,24 @@ export function ProgramInformationSection({
             <FieldError message={errors.programName} />
           </>
         </FormField>
-
         <FormField htmlFor="amountRequested" label="Requested amount (USD)">
-          {" "}
           <>
-            <TextInput
-              id="amountRequested"
-              name="amountRequested"
-              type="number"
-              required
-              min="0.01"
-              step="0.01"
-              inputMode="decimal"
-              placeholder="1000.00"
-              value={values.amountRequested}
-              onChange={onFieldChange}
-            />
+            <div className="flex items-center rounded-md border border-slate-300 bg-white shadow-sm focus-within:border-slate-500 focus-within:ring-2 focus-within:ring-slate-200">
+              <span className="px-3 text-sm text-slate-500">$</span>
+              <TextInput
+                id="amountRequested"
+                name="amountRequested"
+                type="number"
+                required
+                min="0.01"
+                step="0.01"
+                inputMode="decimal"
+                placeholder="1000.00"
+                value={values.amountRequested}
+                onChange={onFieldChange}
+                className="border-0 shadow-none focus:border-0 focus:ring-0"
+              />
+            </div>
             <FieldError message={errors.amountRequested} />
           </>
         </FormField>

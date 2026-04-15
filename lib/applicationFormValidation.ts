@@ -78,6 +78,39 @@ function validatePhoneNumber(phoneNumber: string): string | undefined {
   return undefined;
 }
 
+function validateDateOfBirth(dateOfBirth: string): string | undefined {
+  if (!dateOfBirth.trim()) {
+    return "Date of birth is required";
+  }
+
+  const dob = new Date(dateOfBirth);
+
+  if (Number.isNaN(dob.getTime())) {
+    return "Enter a valid date of birth";
+  }
+
+  const today = new Date();
+
+  let age = today.getFullYear() - dob.getFullYear();
+  const hasHadBirthdayThisYear =
+    today.getMonth() > dob.getMonth() ||
+    (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
+
+  if (!hasHadBirthdayThisYear) {
+    age -= 1;
+  }
+
+  if (age < 0) {
+    return "Date of birth cannot be in the future";
+  }
+
+  if (age > 120) {
+    return "Enter a realistic date of birth";
+  }
+
+  return undefined;
+}
+
 function validateSsn(ssn: string): string | undefined {
   if (!ssn.trim()) {
     return "SSN is required";
@@ -152,7 +185,7 @@ export function validateStringField(
     case "phoneNumber":
       return validatePhoneNumber(value);
     case "dateOfBirth":
-      return validateRequired(value, "Date of birth");
+      return validateDateOfBirth(value);
     case "ssn":
       return validateSsn(value);
     case "addressLine1":
