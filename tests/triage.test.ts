@@ -1,5 +1,7 @@
 import { evaluateApplication } from "@/lib/triage";
 import { ApplicationInput } from "@/types/application";
+import { POST } from "@/app/api/applications/route";
+import { NextRequest } from "next/server";
 
 function buildApplication(
   overrides: Partial<ApplicationInput> = {},
@@ -58,5 +60,21 @@ describe("evaluateApplication", () => {
     expect(result.riskFlags).toContain("invalid_ssn_first_3");
     expect(result.riskFlags).toContain("invalid_ssn_middle_2");
     expect(result.riskFlags).toContain("invalid_ssn_last_4");
+  });
+});
+
+describe("POST /api/applications auth", () => {
+  it("returns 401 when API key is missing", async () => {
+    const request = new NextRequest("http://localhost:3000/api/applications", {
+      method: "POST",
+      body: JSON.stringify({}),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const response = await POST(request);
+
+    expect(response.status).toBe(401);
   });
 });
