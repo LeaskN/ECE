@@ -1,23 +1,40 @@
-import { getStringValue } from "@/lib/utils/common";
 import { ApplicationInput } from "@/types/application";
+import { US_STATES } from "@/lib/usStates";
+import { getDigitsOnly, getStringValue } from "@/lib/utils/common";
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-function isValidDateOfBirth(dateOfBirth: string): boolean {
-  const dob = new Date(dateOfBirth);
+function isValidPhoneNumber(phoneNumber: string): boolean {
+  return getDigitsOnly(phoneNumber).length === 10;
+}
 
-  if (Number.isNaN(dob.getTime())) {
+function isValidIsoDate(dateOfBirth: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) {
+    return false;
+  }
+
+  const [yearString, monthString, dayString] = dateOfBirth.split("-");
+  const year = Number(yearString);
+  const month = Number(monthString);
+  const day = Number(dayString);
+
+  const dob = new Date(Date.UTC(year, month - 1, day));
+
+  if (
+    dob.getUTCFullYear() !== year ||
+    dob.getUTCMonth() !== month - 1 ||
+    dob.getUTCDate() !== day
+  ) {
     return false;
   }
 
   const today = new Date();
-
-  let age = today.getFullYear() - dob.getFullYear();
+  let age = today.getFullYear() - year;
   const hasHadBirthdayThisYear =
-    today.getMonth() > dob.getMonth() ||
-    (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
+    today.getMonth() + 1 > month ||
+    (today.getMonth() + 1 === month && today.getDate() >= day);
 
   if (!hasHadBirthdayThisYear) {
     age -= 1;
@@ -31,16 +48,35 @@ function isValidSsn(ssn: string): boolean {
 }
 
 function isValidState(state: string): boolean {
-  return /^[A-Z]{2}$/.test(state);
+  return US_STATES.some((entry) => entry.code === state);
 }
 
 function isValidZipCode(zipCode: string): boolean {
   return /^\d{5}(-\d{4})?$/.test(zipCode);
 }
 
+function isValidAmount(amountRequested: string): boolean {
+  if (!/^\d+(\.\d{1,2})?$/.test(amountRequested)) {
+    return false;
+  }
+
+  const parsedAmount = Number(amountRequested);
+
+  return Number.isFinite(parsedAmount) && parsedAmount > 0;
+}
+
+function validateRequired(value: string, label: string): void {
+  if (!value) {
+    throw new Error(`${label} is required`);
+  }
+}
+
 export function parseAndValidateApplicationInput(
   raw: Record<string, unknown>,
 ): ApplicationInput {
+  const rawAmountRequested = getStringValue(raw.amountRequested);
+  const normalizedState = getStringValue(raw.state).toUpperCase();
+
   const input: ApplicationInput = {
     firstName: getStringValue(raw.firstName),
     lastName: getStringValue(raw.lastName),
@@ -51,64 +87,52 @@ export function parseAndValidateApplicationInput(
     addressLine1: getStringValue(raw.addressLine1),
     addressLine2: getStringValue(raw.addressLine2),
     city: getStringValue(raw.city),
-    state: getStringValue(raw.state).toUpperCase(),
+    state: normalizedState,
     zipCode: getStringValue(raw.zipCode),
     programName: getStringValue(raw.programName),
-    amountRequested: Number(raw.amountRequested),
+    amountRequested: 0,
     agreementAccepted: raw.agreementAccepted === true,
   };
 
-  if (!input.firstName) {
-    throw new Error("First name is required");
-  }
-
-  if (!input.lastName) {
-    throw new Error("Last name is required");
-  }
+  validateRequired(input.firstName, "First name");
+  validateRequired(input.lastName, "Last name");
+  validateRequired(input.addressLine1, "Address line 1");
+  validateRequired(input.city, "City");
+  validateRequired(input.programName, "Program name");
 
   if (!isValidEmail(input.email)) {
     throw new Error("A valid email is required");
   }
 
-  if (!input.phoneNumber) {
-    throw new Error("Phone number is required");
+  if (!isValidPhoneNumber(input.phoneNumber)) {
+    throw new Error("A valid 10-digit phone number is required");
   }
 
-  if (!isValidDateOfBirth(input.dateOfBirth)) {
+  if (!isValidIsoDate(input.dateOfBirth)) {
     throw new Error("A valid date of birth is required");
   }
 
   if (!isValidSsn(input.ssn)) {
-    throw new Error("SSN must be in the format nnn-nn-nnnn");
-  }
-
-  if (!input.addressLine1) {
-    throw new Error("Address line 1 is required");
-  }
-
-  if (!input.city) {
-    throw new Error("City is required");
+    throw new Error("SSN must be in the format 123-45-6789");
   }
 
   if (!isValidState(input.state)) {
-    throw new Error("State must be a 2-letter code");
+    throw new Error("State must be a valid 2-letter US code");
   }
 
   if (!isValidZipCode(input.zipCode)) {
-    throw new Error("ZIP code must be 5 digits");
+    throw new Error("ZIP code must be 5 digits or ZIP+4");
   }
 
-  if (!input.programName) {
-    throw new Error("Program name is required");
-  }
-
-  if (!Number.isFinite(input.amountRequested) || input.amountRequested <= 0) {
+  if (!isValidAmount(rawAmountRequested)) {
     throw new Error("Amount requested must be greater than 0");
   }
 
   if (!input.agreementAccepted) {
     throw new Error("Agreement must be accepted");
   }
+
+  input.amountRequested = Number(rawAmountRequested);
 
   return input;
 }

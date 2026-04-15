@@ -1,6 +1,9 @@
 "use server";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001";
+import { headers } from "next/headers";
+
+const INTERNAL_API_KEY =
+  process.env.INTERNAL_API_KEY ?? "local-development-api-key";
 
 type SubmitResult = {
   success: boolean;
@@ -9,6 +12,25 @@ type SubmitResult = {
   riskFlags?: string[];
   error?: string;
 };
+
+async function getApiBaseUrl(): Promise<string> {
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL;
+  }
+
+  const headerStore = await headers();
+  const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
+
+  if (!host) {
+    return "http://localhost:3000";
+  }
+
+  const protocol =
+    headerStore.get("x-forwarded-proto") ??
+    (host.includes("localhost") ? "http" : "https");
+
+  return `${protocol}://${host}`;
+}
 
 export async function submitApplication(
   _prevState: SubmitResult | null,
@@ -31,11 +53,13 @@ export async function submitApplication(
     agreementAccepted: formData.get("agreementAccepted") === "on",
   };
 
-  const response = await fetch(`${API_BASE_URL}/api/applications`, {
+  const apiBaseUrl = await getApiBaseUrl();
+
+  const response = await fetch(`${apiBaseUrl}/api/applications`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-API-Key": process.env.INTERNAL_API_KEY ?? "",
+      "X-API-Key": INTERNAL_API_KEY,
     },
     body: JSON.stringify(payload),
     cache: "no-store",

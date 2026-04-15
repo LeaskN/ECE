@@ -9,8 +9,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   const apiKey = request.headers.get("X-API-Key");
+  const INTERNAL_API_KEY =
+    process.env.INTERNAL_API_KEY ?? "local-development-api-key";
 
-  if (!apiKey || apiKey !== process.env.INTERNAL_API_KEY) {
+  if (!apiKey || apiKey !== INTERNAL_API_KEY) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -50,7 +52,7 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 },
     );
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Invalid application payload" },
       { status: 400 },
